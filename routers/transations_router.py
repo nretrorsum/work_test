@@ -4,6 +4,7 @@ from uuid import UUID
 from typing import List, Optional
 from routers.models.models import TransactionResponse, TransactionUpdate, TransactionRequest
 from db.repository import repository
+from auth.core_functions import user_dependency
 import uuid
 
 
@@ -37,12 +38,17 @@ async def create_transaction(transaction_data: TransactionRequest):
 
 @transaction_router.get("/", response_model=List[TransactionResponse])
 async def get_transactions(
+    user: user_dependency,
     skip: int = 0,
     limit: int = 100,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None
 ):
+    if user['role'] != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
+        if user['role'] != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
         transactions = await repository.get_transactions_with_items(
             skip=skip,
             limit=limit,
@@ -57,7 +63,9 @@ async def get_transactions(
         )
 
 @transaction_router.get("/{transaction_id}", response_model=TransactionResponse)
-async def get_transaction(transaction_id: UUID):
+async def get_transaction(user: user_dependency, transaction_id: UUID):
+    if user['role'] != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
         transaction = await repository.get_transaction_with_items(transaction_id)
         if not transaction:
@@ -74,10 +82,14 @@ async def get_transaction(transaction_id: UUID):
 
 @transaction_router.patch("/{transaction_id}", response_model=TransactionResponse)
 async def patch_transaction(
+    user: user_dependency,
     transaction_id: UUID,
     transaction_update: TransactionUpdate
 ):
+    if user['role'] != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
+        
         # Фільтруємо None значення
         update_data = {
             "cashier_id": transaction_update.cashier_id,
@@ -114,7 +126,9 @@ async def patch_transaction(
         )
 
 @transaction_router.delete("/{transaction_id}")
-async def delete_transaction(transaction_id: UUID):
+async def delete_transaction(user: user_dependency, transaction_id: UUID):
+    if user['role'] != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
         success = await repository.delete_transaction(transaction_id)
         if not success:

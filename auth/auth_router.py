@@ -1,11 +1,9 @@
-from fastapi import APIRouter, HTTPException, Response, Depends
+from fastapi import APIRouter, HTTPException, Response
 from auth.models.models import RegisterUser, LoginUser
 from db.auth_repository import auth_repository
-from db.model import User
 from passlib.context import CryptContext
 from datetime import timedelta
-from auth.core_functions import get_current_user
-from typing import Annotated
+from auth.core_functions import user_dependency
 from auth.core_functions import create_jwt_token
 import logging
 logging.basicConfig()
@@ -75,7 +73,7 @@ async def logout_user(response: Response):
             detail=f"Logout error: {str(e)}"
         )
         
-user_dependency = Annotated[User, Depends(get_current_user)]
+
 
 # Використовуємо в ендпоінтах
 @auth_router.get("/me")

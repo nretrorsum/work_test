@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from config import SECRET, ALGORITHM
 from jose import jwt, JWTError
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Depends, status 
 from fastapi.params import Cookie
 from db.auth_repository import auth_repository
-from typing import Optional
+from typing import Optional, Annotated
+from db.model import User
 import logging 
 logging.basicConfig()
 
@@ -59,3 +60,5 @@ async def get_current_user(token: Optional[str] = Cookie(alias='access_token', d
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Could not validate credentials: {str(e)}",
         )
+        
+user_dependency = Annotated[User, Depends(get_current_user)]
