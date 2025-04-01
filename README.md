@@ -20,330 +20,271 @@ A FastAPI-based system for managing store operations with:
 
 ## API Endpoints
 
-Authentication
-POST /api/auth/register
-Description: Register a new user
+### POST /api/auth/login
+Logs in a user and returns a JWT token in cookies.
 
 Request Body:
-
-
-{
-  "username": "string",
-  "password": "string",
-  "role": "admin" | "cashier"
-}
-Response:
-
-
-{
-  "status": "201",
-  "detail": "user created"
-}
-POST /api/auth/login
-Description: Login user and set JWT cookie
-
-Request Body:
-
-
+```
 {
   "username": "string",
   "password": "string"
 }
+```
 Response:
+```
+Status: 200 OK
+```
+Returns a JWT token set as a cookie (access_token).
 
-
-{
-  "status": "200",
-  "detail": "Authenticated"
-}
-Sets Cookie: access_token with JWT
-
-POST /api/auth/logout
-Description: Logout user by clearing JWT cookie
-
-Response:
-
-
-{
-  "status": "200",
-  "detail": "Successfully logged out"
-}
-GET /api/auth/me
-Description: Get current user profile
-
-Requires Authentication: Yes (JWT cookie)
+### POST /api/auth/logout
+Logs out the user by clearing the JWT token cookie.
 
 Response:
 
+Status: 200 OK
 
+Returns: A message confirming successful logout.
+
+### GET /api/auth/me
+Fetches the authenticated user's profile.
+
+Response:
+```
 {
-  "user_id": "uuid",
+  "user_id": "string",
   "username": "string",
-  "role": "string"
+  "role": "admin" | "cashier"
 }
-Products
-POST /api/product/add_product
-Description: Add a new product
-
-Requires Authentication: Yes (admin role)
+```
+Product Endpoints
+### POST /api/product/add_product
+Adds a new product to the system.
 
 Request Body:
-
-
+```
 {
   "name": "string",
-  "price": integer,
-  "quantity": integer
+  "price": "number",
+  "quantity": "number"
 }
+```
 Response:
+```
+Status: 201 Created
+```
+Returns: The created product data.
 
-
-{
-  "id": "uuid",
-  "name": "string",
-  "price": float,
-  "quantity": float,
-  "created_at": "datetime"
-}
-GET /api/product/
-Description: List all products with pagination
+### GET /api/product
+Lists all products, with optional pagination.
 
 Query Parameters:
+```
+skip (optional): Number of products to skip. Default is 0.
 
-skip: integer (default 0)
-
-limit: integer (default 100)
-
+limit (optional): Number of products to return. Default is 100.
+```
 Response:
-
-
+```
 [
   {
-    "id": "uuid",
+    "id": "UUID",
     "name": "string",
-    "price": float,
-    "quantity": float,
+    "price": "number",
+    "quantity": "number",
     "created_at": "datetime"
   }
 ]
-GET /api/product/{product_id}
-Description: Get product details by ID
+```
+#GET /api/product/{product_id}
+Fetches a single product by its ID.
 
+Path Parameter:
+```
+product_id (required): The UUID of the product.
+```
 Response:
-
-
+```
 {
-  "id": "uuid",
+  "id": "UUID",
   "name": "string",
-  "price": float,
-  "quantity": float,
+  "price": "number",
+  "quantity": "number",
   "created_at": "datetime"
 }
-PUT /api/product/update_product/{product_id}
-Description: Fully update a product
+```
+### PUT /api/product/update_product/{product_id}
+Updates an existing product.
 
-Requires Authentication: Yes (admin role)
-
+Path Parameter:
+```
+product_id (required): The UUID of the product.
+```
 Request Body:
-
-
+```
 {
   "name": "string",
-  "price": integer,
-  "quantity": integer
+  "price": "number",
+  "quantity": "number"
 }
+```
 Response:
-
-
+```
 {
-  "id": "uuid",
+  "id": "UUID",
   "name": "string",
-  "price": float,
-  "quantity": float,
+  "price": "number",
+  "quantity": "number",
   "created_at": "datetime"
 }
-PATCH /api/product/patch_product/{product_id}
-Description: Partially update a product
+```
+### PATCH /api/product/patch_product/{product_id}
+Partially updates an existing product.
 
-Requires Authentication: Yes (admin role)
-
+Path Parameter:
+```
+product_id (required): The UUID of the product.
+```
 Request Body:
-
-
+```
 {
-  "name": "string (optional)",
-  "price": "integer (optional)",
-  "quantity": "integer (optional)"
-}
-Response:
-
-
-{
-  "id": "uuid",
   "name": "string",
-  "price": float,
-  "quantity": float,
+  "price": "number",
+  "quantity": "number"
+}
+```
+Response:
+```
+{
+  "id": "UUID",
+  "name": "string",
+  "price": "number",
+  "quantity": "number",
   "created_at": "datetime"
 }
-Transactions
-POST /transactions/
-Description: Create a new transaction with items
-
-Requires Authentication: Yes (cashier role)
+```
+Transaction Endpoints
+### POST /transactions
+Creates a new transaction with products.
 
 Request Body:
-
-
+```
 {
-  "cashier_id": "uuid",
-  "total_price": integer,
-  "status": "paid" | "canceled",
+  "cashier_id": "UUID",
+  "total_price": "number",
+  "status": "string",
   "items": [
     {
-      "product_id": "uuid",
-      "quantity": integer
+      "product_id": "UUID",
+      "quantity": "number",
+      "price": "number"
     }
   ]
 }
+```
 Response:
-
-
+```
 {
-  "id": "uuid",
-  "cashier_id": "uuid",
-  "total_price": integer,
+  "id": "UUID",
+  "cashier_id": "UUID",
+  "total_price": "number",
   "status": "string",
   "created_at": "datetime",
-  "updated_at": "datetime",
-  "items": [
-    {
-      "product_id": "uuid",
-      "name": "string",
-      "price": integer,
-      "quantity": integer
-    }
-  ]
+  "updated_at": "datetime"
 }
-GET /transactions/
-Description: List transactions with optional date filtering
+```
+### GET /transactions
+Lists all transactions, with optional filtering and pagination.
 
 Query Parameters:
+```
+skip (optional): Number of transactions to skip. Default is 0.
 
-skip: integer (default 0)
+limit (optional): Number of transactions to return. Default is 100.
 
-limit: integer (default 100)
+start_date (optional): Start date for filtering transactions.
 
-start_date: datetime (optional)
-
-end_date: datetime (optional)
-
+end_date (optional): End date for filtering transactions.
+```
 Response:
-
-
+```
 [
   {
-    "id": "uuid",
-    "cashier_id": "uuid",
-    "total_price": integer,
+    "id": "UUID",
+    "cashier_id": "UUID",
+    "total_price": "number",
     "status": "string",
     "created_at": "datetime",
-    "updated_at": "datetime",
-    "items": [
-      {
-        "product_id": "uuid",
-        "name": "string",
-        "price": integer,
-        "quantity": integer
-      }
-    ]
+    "updated_at": "datetime"
   }
 ]
-GET /transactions/{transaction_id}
-Description: Get transaction details by ID
+```
+### GET /transactions/{transaction_id}
+Fetches a single transaction by its ID.
 
+Path Parameter:
+```
+transaction_id (required): The UUID of the transaction.
+```
 Response:
-
-
+```
 {
-  "id": "uuid",
-  "cashier_id": "uuid",
-  "total_price": integer,
+  "id": "UUID",
+  "cashier_id": "UUID",
+  "total_price": "number",
   "status": "string",
   "created_at": "datetime",
-  "updated_at": "datetime",
-  "items": [
-    {
-      "product_id": "uuid",
-      "name": "string",
-      "price": integer,
-      "quantity": integer
-    }
-  ]
+  "updated_at": "datetime"
 }
-PATCH /transactions/{transaction_id}
-Description: Update transaction details
+```
+### PATCH /transactions/{transaction_id}
+Partially updates an existing transaction.
 
+Path Parameter:
+```
+transaction_id (required): The UUID of the transaction.
+```
 Request Body:
-
-
+```
 {
-  "cashier_id": "uuid (optional)",
-  "total_price": "integer (optional)",
-  "status": "string (optional)"
+  "cashier_id": "UUID",
+  "total_price": "number",
+  "status": "string"
 }
+```
 Response:
-
-
+```
 {
-  "id": "uuid",
-  "cashier_id": "uuid",
-  "total_price": integer,
+  "id": "UUID",
+  "cashier_id": "UUID",
+  "total_price": "number",
   "status": "string",
   "created_at": "datetime",
-  "updated_at": "datetime",
-  "items": [
-    {
-      "product_id": "uuid",
-      "name": "string",
-      "price": integer,
-      "quantity": integer
-    }
-  ]
+  "updated_at": "datetime"
 }
-DELETE /transactions/{transaction_id}
-Description: Delete a transaction
+```
+### DELETE /transactions/{transaction_id}
+Deletes a transaction.
 
+Path Parameter:
+```
+transaction_id (required): The UUID of the transaction.
+```
 Response:
-
-
+```
 {
   "message": "Transaction deleted successfully"
 }
-Database Schema
-The system uses the following main tables:
+```
+Error Handling
+All endpoints support the following HTTP status codes for error handling:
+```
+400 Bad Request: Invalid request data.
 
-users: Stores user accounts with roles
+401 Unauthorized: Invalid authentication or login required.
 
-products: Stores product information
+403 Forbidden: User does not have permission to access the resource.
 
-transactions: Records sales transactions
+404 Not Found: Resource not found.
 
-transaction_product: Junction table for transaction items
-
-Error Responses
-All endpoints return standardized error responses:
-
-400 Bad Request: Invalid input data
-
-401 Unauthorized: Missing or invalid authentication
-
-404 Not Found: Resource not found
-
-500 Internal Server Error: Server-side error
-
-Error response format:
-
-
-{
-  "detail": "Error message"
-}
+500 Internal Server Error: Unexpected server error.
+```
