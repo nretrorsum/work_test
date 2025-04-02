@@ -13,15 +13,12 @@ transaction_router = APIRouter(prefix="/transactions")
 @transaction_router.post("/", response_model=TransactionResponse)
 async def create_transaction(transaction_data: TransactionRequest):
     try:
-        # Конвертуємо Pydantic модель у dict
         transaction_dict = transaction_data.dict()
         
-        # Додаємо автоматичні поля, якщо потрібно
         transaction_dict['id'] = uuid.uuid4()
         transaction_dict['created_at'] = datetime.utcnow()
         transaction_dict['updated_at'] = datetime.utcnow()
         
-        # Створюємо транзакцію з продуктами
         created_transaction = await repository.create_transaction_with_items(transaction_dict)
         return created_transaction
         
@@ -90,7 +87,6 @@ async def patch_transaction(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     try:
         
-        # Фільтруємо None значення
         update_data = {
             "cashier_id": transaction_update.cashier_id,
             "total_price": transaction_update.total_price,

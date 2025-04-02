@@ -16,7 +16,6 @@ async def create_jwt_token(login: str, user_id: int, role: str, expires_delta: t
     return jwt.encode(encode, SECRET, algorithm=ALGORITHM)
 
 async def get_current_user(token: Optional[str] = Cookie(alias='access_token', default='')):
-    # Отримуємо токен з cookies
     logging.info(f'Token from cookie:{token}')
     if not token:
         raise HTTPException(
@@ -25,10 +24,8 @@ async def get_current_user(token: Optional[str] = Cookie(alias='access_token', d
         )
 
     try:
-        # Декодуємо токен
         payload = jwt.decode(token, SECRET, algorithms=[ALGORITHM])
         logging.info(f'JWT payload:{payload}')
-        #user_id: str = payload.get("id")
         username: str = payload.get("sub")
         expire: int = payload.get("exp")
         
@@ -38,14 +35,12 @@ async def get_current_user(token: Optional[str] = Cookie(alias='access_token', d
                 detail="Invalid token credentials",
             )
         
-        # Перевіряємо чи не закінчився термін дії токена
         if datetime.fromtimestamp(expire) < datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token expired",
             )
-        
-        # Отримуємо користувача з бази даних
+
         user = await auth_repository.get_user(username)
         if not user:
             raise HTTPException(

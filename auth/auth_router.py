@@ -19,7 +19,7 @@ async def register_user(user: RegisterUser):
     user_dict = {
         'username': user.username,
         'password': bcrypt_context.hash(user.password),
-        'role': user.role.value  # Беремо значення enum ('admin' або 'cashier')
+        'role': user.role.value  
     }
     return await auth_repository.register_user(user_dict)
 
@@ -32,7 +32,6 @@ async def login_user(user: LoginUser, response: Response):
     if not bcrypt_context.verify(user.password, checked_user['password_hash']):
         raise HTTPException(status_code=401, detail='Not authenticated')
 
-    # Переконуємося, що токен створюється правильно
     token = await create_jwt_token(
         login=user.username,
         user_id=str(checked_user['id']),
@@ -55,7 +54,6 @@ async def login_user(user: LoginUser, response: Response):
 @auth_router.post("/logout")
 async def logout_user(response: Response):
     try:
-        # Видаляємо кукі з access_token
         response.set_cookie(
             key="access_token",
             value="",
@@ -72,10 +70,7 @@ async def logout_user(response: Response):
             status_code=500,
             detail=f"Logout error: {str(e)}"
         )
-        
 
-
-# Використовуємо в ендпоінтах
 @auth_router.get("/me")
 async def get_user_profile(user: user_dependency):
     return {"user_id": user['id'], "username": user['username'], "role": user['role']}

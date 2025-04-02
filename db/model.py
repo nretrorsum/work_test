@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import (
     Column, String, DateTime, Integer, 
-    ForeignKey, Enum, Table, Numeric, UUID
+    ForeignKey, Table, Numeric, UUID
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,13 +11,12 @@ import uuid
 
 Base = declarative_base()
 
-# Association table for many-to-many relationship between Transaction and Product
 transaction_product = Table(
     'transaction_product',
     Base.metadata,
     Column('transaction_id', UUID(as_uuid=True), ForeignKey('transactions.id'), primary_key=True),
     Column('product_id', UUID(as_uuid=True), ForeignKey('products.id'), primary_key=True),
-    Column('quantity', Numeric(10, 2), nullable=False)  # Changed to Numeric for quantity
+    Column('quantity', Numeric(10, 2), nullable=False)  
 )
 
 class Product(Base):
@@ -26,7 +25,7 @@ class Product(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
-    quantity = Column(Numeric(10, 2), nullable=False, default=0)  # Changed to Numeric
+    quantity = Column(Numeric(10, 2), nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     transactions = relationship(
@@ -39,13 +38,12 @@ class Transaction(Base):
     __tablename__ = 'transactions'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    cashier_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)  # Changed to UUID
+    cashier_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False) 
     total_price = Column(Numeric(10, 2), nullable=False)
     status = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # Relationships
     cashier = relationship("User", back_populates="transactions")
     products = relationship(
         "Product",
@@ -62,12 +60,4 @@ class User(Base):
     role = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
     transactions = relationship("Transaction", back_populates="cashier")
-    
-class Role(Base):
-    __tablename__ = 'roles'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True, nullable=False)  # 'cashier', 'accountant', 'admin'
-    description = Column(String(255))

@@ -31,9 +31,8 @@ class AuthRepository(AbstractAuthRepository):
     async def get_user(self, login: str) -> Optional[dict]:
         async with self.db.begin() as session:
             try:
-                # Більш сучасний стиль запиту
                 stmt = select(User).where(User.username == login)
-                user = await session.scalar(stmt)  # Простий спосіб отримати один результат
+                user = await session.scalar(stmt)  
                 
                 if not user:
                     return None
@@ -47,8 +46,5 @@ class AuthRepository(AbstractAuthRepository):
                 }
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Error: {e}")
-    
-    async def delete_user(self, login: str):
-        pass
     
 auth_repository = AuthRepository(async_session)

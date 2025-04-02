@@ -11,7 +11,6 @@ product_router = APIRouter(
 @product_router.post('/add_product')
 async def add_product(product: AddNewProduct):
     try:
-        # Не передаємо id і created_at - вони генеруються в репозиторії
         product_data = {
             "name": product.name,
             "price": product.price,
@@ -65,13 +64,11 @@ async def update_product(
     product_update: ProductUpdate,
 ):
     try:
-        # Фільтруємо None значення та встановлюємо дефолтні
         update_data = {
             "name": product_update.name,
             "price": product_update.price,
             "quantity": product_update.quantity if product_update.quantity is not None else 0
         }
-        # Видаляємо поля з None значеннями
         update_data = {k: v for k, v in update_data.items() if v is not None}
         
         if not update_data:
@@ -107,13 +104,11 @@ async def patch_product(
     product_update: ProductUpdate,
 ):
     try:
-        # Фільтруємо None значення та встановлюємо дефолтні
         update_data = {
             "name": product_update.name,
             "price": product_update.price,
             "quantity": product_update.quantity if product_update.quantity is not None else None
         }
-        # Видаляємо поля з None значеннями
         update_data = {k: v for k, v in update_data.items() if v is not None and v is not 0}
         
         if not update_data:

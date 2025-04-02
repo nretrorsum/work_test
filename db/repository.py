@@ -39,12 +39,12 @@ class Repository(AbstractRepository):
                 
     
     async def create_product(self, product_data):
-        async with self.db.begin() as session:  # Використовуємо begin() для автоматичного коміту
+        async with self.db.begin() as session:  
             try:
                 stmt = (
                     insert(Product)
                     .values(
-                        id=product_data.get('id', uuid.uuid4()),  # Генеруємо UUID, якщо не вказано
+                        id=product_data.get('id', uuid.uuid4()),  
                         name=product_data['name'],
                         price=product_data['price'],
                         quantity=product_data.get('quantity', 0),
@@ -60,7 +60,7 @@ class Repository(AbstractRepository):
                     'id': created_product.id,
                     'name': created_product.name,
                     'price': float(created_product.price),
-                    'quantity': float(created_product.quantity),  # Теж конвертуємо до float
+                    'quantity': float(created_product.quantity),  
                     'created_at': created_product.created_at.isoformat()
                 }
                 
@@ -71,11 +71,11 @@ class Repository(AbstractRepository):
     async def patch_product(self, product_id: UUID, update_data: Dict[str, Any]) -> Dict[str, Any]:
         async with self.db.begin() as session:
             try:
-                # Проверяем, есть ли вообще данные для обновления
+    
                 if not update_data:
                     raise ValueError("No update data provided")
                 
-                # Создаем запрос на частичное обновление
+
                 stmt = (
                     update(Product)
                     .where(Product.id == product_id)
@@ -83,11 +83,11 @@ class Repository(AbstractRepository):
                     .returning(Product)
                 )
                 
-                # Выполняем запрос
+
                 result = await session.execute(stmt)
                 updated_product = result.scalar_one()
                 
-                # Возвращаем обновленный продукт в виде словаря
+
                 return {
                     'id': updated_product.id,
                     'name': updated_product.name,
@@ -102,11 +102,9 @@ class Repository(AbstractRepository):
     async def update_product(self, product_id: UUID, product_data: Dict[str, Any]) -> Dict[str, Any]:
         async with self.db.begin() as session:
             try:
-                # Перевіряємо, чи є дані для оновлення
                 if not product_data:
                     raise ValueError("No product data provided for update")
                 
-                # Створюємо запит на повне оновлення
                 stmt = (
                     update(Product)
                     .where(Product.id == product_id)
@@ -114,11 +112,11 @@ class Repository(AbstractRepository):
                     .returning(Product)
                 )
                 
-                # Виконуємо запит
+    
                 result = await session.execute(stmt)
                 updated_product = result.scalar_one()
                 
-                # Повертаємо оновлений продукт у вигляді словника
+
                 return {
                     'id': updated_product.id,
                     'name': updated_product.name,
@@ -134,22 +132,19 @@ class Repository(AbstractRepository):
     async def delete_product(self, product_id: UUID) -> bool:
         async with self.db.begin() as session:
             try:
-                # Створюємо запит на видалення продукту
                 stmt = (
                     delete(Product)
                     .where(Product.id == product_id)
                     .returning(Product.id)
                 )
                 
-                # Виконуємо запит
+
                 result = await session.execute(stmt)
                 deleted_product_id = result.scalar_one_or_none()
                 
-                # Якщо продукт не знайдено, повертаємо False
                 if not deleted_product_id:
                     return False
-                    
-                # Повертаємо True у випадку успішного видалення
+    
                 return True
                 
             except Exception as e:
@@ -159,13 +154,11 @@ class Repository(AbstractRepository):
     async def create_transaction_with_items(self, transaction_data: Dict[str, Any]) -> Dict[str, Any]:
         async with self.db.begin() as session:
             try:
-                # Перевірка обов'язкових полів
                 required_fields = ['cashier_id', 'total_price', 'items']
                 for field in required_fields:
                     if field not in transaction_data:
                         raise ValueError(f"Missing required field: {field}")
 
-                # Отримуємо інформацію про продукти
                 product_ids = [item['product_id'] for item in transaction_data['items']]
                 products = await session.execute(
                     select(Product).where(Product.id.in_(product_ids))
@@ -173,12 +166,10 @@ class Repository(AbstractRepository):
                 products = products.scalars().all()
                 product_map = {p.id: p for p in products}
 
-                # Перевіряємо, чи всі продукти знайдені
                 for item in transaction_data['items']:
                     if item['product_id'] not in product_map:
                         raise ValueError(f"Product {item['product_id']} not found")
 
-                # Створення транзакції
                 transaction_values = {
                     'id': transaction_data.get('id', uuid.uuid4()),
                     'cashier_id': transaction_data['cashier_id'],
@@ -188,12 +179,10 @@ class Repository(AbstractRepository):
                     'updated_at': transaction_data.get('updated_at', datetime.utcnow())
                 }
                 
-                # Вставка транзакції
                 stmt = insert(Transaction).values(**transaction_values).returning(Transaction)
                 result = await session.execute(stmt)
                 new_transaction = result.scalar_one()
                 
-                # Вставка продуктів транзакції
                 if transaction_data['items']:
                     items_values = [{
                         'transaction_id': new_transaction.id,
@@ -205,11 +194,10 @@ class Repository(AbstractRepository):
                         insert(transaction_product).values(items_values)
                     )
                 
-                # Формуємо коректну відповідь
                 transaction_dict = {
                     'id': new_transaction.id,
                     'cashier_id': new_transaction.cashier_id,
-                    'total_price': int(new_transaction.total_price),  # Конвертуємо до int
+                    'total_price': int(new_transaction.total_price),  
                     'status': new_transaction.status,
                     'created_at': new_transaction.created_at.isoformat(),
                     'updated_at': new_transaction.updated_at.isoformat(),
@@ -217,14 +205,12 @@ class Repository(AbstractRepository):
                         {
                             'product_id': item['product_id'],
                             'name': product_map[item['product_id']].name,
-                            'price': int(product_map[item['product_id']].price),  # Конвертуємо до int
-                            'quantity': int(item['quantity'])  # Конвертуємо до int
+                            'price': int(product_map[item['product_id']].price),  
+                            'quantity': int(item['quantity'])  
                         } for item in transaction_data['items']
                     ]
                 }
-                
                 return transaction_dict
-                
             except Exception as e:
                 await session.rollback()
                 raise ValueError(f"Failed to create transaction: {str(e)}")
@@ -237,7 +223,6 @@ class Repository(AbstractRepository):
         end_date: Optional[datetime] = None
     ) -> List[Dict[str, Any]]:
         async with self.db.begin() as session:
-            # Базовий запит для транзакцій
             stmt = (
                 select(
                     Transaction,
@@ -257,7 +242,6 @@ class Repository(AbstractRepository):
                 .limit(limit)
             )
 
-            # Додаємо фільтрацію по даті, якщо вказано
             if start_date:
                 stmt = stmt.where(Transaction.created_at >= start_date)
             if end_date:
@@ -266,14 +250,13 @@ class Repository(AbstractRepository):
             result = await session.execute(stmt)
             records = result.all()
 
-            # Групуємо результати по транзакціях
             transactions_map = {}
             for transaction, product, quantity in records:
                 if transaction.id not in transactions_map:
                     transactions_map[transaction.id] = {
                         "id": transaction.id,
                         "cashier_id": transaction.cashier_id,
-                        "total_price": int(transaction.total_price),  # Конвертуємо до int
+                        "total_price": int(transaction.total_price),  
                         "status": transaction.status,
                         "created_at": transaction.created_at.isoformat(),
                         "updated_at": transaction.updated_at.isoformat(),
@@ -282,15 +265,14 @@ class Repository(AbstractRepository):
                 transactions_map[transaction.id]["items"].append({
                     "product_id": product.id,
                     "name": product.name,
-                    "price": int(product.price),  # Конвертуємо до int
-                    "quantity": int(quantity)  # Конвертуємо до int
+                    "price": int(product.price),  
+                    "quantity": int(quantity)  
                 })
 
             return list(transactions_map.values())
     
     async def get_transaction_with_items(self, transaction_id: UUID):
         async with self.db.begin() as session:
-            # Запит з JOIN
             stmt = (
                 select(
                     Transaction,
@@ -314,19 +296,18 @@ class Repository(AbstractRepository):
             if not records:
                 return None
                 
-            # Формуємо відповідь
             transaction = records[0][0]
             items = [{
                 "product_id": product.id,
                 "name": product.name,
-                "price": int(product.price),  # Конвертуємо до int
-                "quantity": int(quantity)     # Конвертуємо до int
+                "price": int(product.price),  
+                "quantity": int(quantity)     
             } for (_, product, quantity) in records]
             
             return {
                 "id": transaction.id,
                 "cashier_id": transaction.cashier_id,
-                "total_price": int(transaction.total_price),  # Конвертуємо до int
+                "total_price": int(transaction.total_price),  
                 "status": transaction.status,
                 "created_at": transaction.created_at.isoformat(),
                 "updated_at": transaction.updated_at.isoformat(),
@@ -337,17 +318,14 @@ class Repository(AbstractRepository):
                         update_data: Dict[str, Any]) -> Dict[str, Any]:
         async with self.db.begin() as session:
             try:
-                # Перевіряємо, чи є дані для оновлення
                 if not update_data:
                     raise ValueError("No transaction data provided for update")
                 
-                # Додаткова перевірка на недопустимі поля для оновлення
                 forbidden_fields = ['id', 'created_at']
                 for field in forbidden_fields:
                     if field in update_data:
                         raise ValueError(f"Cannot update field: {field}")
                 
-                # Створюємо запит на оновлення
                 stmt = (
                     update(Transaction)
                     .where(Transaction.id == transaction_id)
@@ -355,14 +333,11 @@ class Repository(AbstractRepository):
                     .returning(Transaction)
                 )
                 
-                # Виконуємо запит
                 result = await session.execute(stmt)
                 updated_transaction = result.scalar_one()
                 
-                # Отримуємо продукти транзакції для повної відповіді
                 items = await self.get_transaction_items(updated_transaction.id)
                 
-                # Повертаємо оновлену транзакцію
                 return {
                     "id": updated_transaction.id,
                     "cashier_id": updated_transaction.cashier_id,
@@ -398,13 +373,11 @@ class Repository(AbstractRepository):
     async def delete_transaction(self, transaction_id: UUID) -> bool:
         async with self.db.begin() as session:
             try:
-                # Спочатку видаляємо зв'язані записи з transaction_product
                 await session.execute(
                     delete(transaction_product)
                     .where(transaction_product.c.transaction_id == transaction_id)
                 )
                 
-                # Потім видаляємо саму транзакцію
                 stmt = (
                     delete(Transaction)
                     .where(Transaction.id == transaction_id)
@@ -419,5 +392,4 @@ class Repository(AbstractRepository):
             except Exception as e:
                 await session.rollback()
                 raise ValueError(f"Failed to delete transaction: {str(e)}")
-# Ініціалізація репозиторію
 repository = Repository(async_session)

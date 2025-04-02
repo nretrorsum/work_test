@@ -39,9 +39,9 @@ class TransactionRequest(BaseModel):
 
 class TransactionItemResponse(BaseModel):
     product_id: UUID
-    name: str  # Назва продукту
-    price: int  # Ціна за одиницю
-    quantity: int  # Кількість
+    name: str 
+    price: int  
+    quantity: int  
 
 class TransactionResponse(BaseModel):
     id: UUID
@@ -50,7 +50,7 @@ class TransactionResponse(BaseModel):
     status: str
     created_at: datetime
     updated_at: datetime
-    items: List[TransactionItemResponse]  # Додаємо список продуктів
+    items: List[TransactionItemResponse]  
 
 class TransactionUpdate(BaseModel):
     cashier_id: Optional[UUID] = None
